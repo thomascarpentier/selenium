@@ -13,7 +13,6 @@ csharp_library(
     deps = [
         "//dotnet/src/webdriver",
         framework("Microsoft.NETCore.App.Ref"),
-        framework("System.Diagnostics.Tools"),
         framework("System.Runtime"),
     ],
 )

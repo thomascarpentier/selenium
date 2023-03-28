@@ -1,9 +1,11 @@
+using Bazel;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Diagnostics;
 using System.Text;
+using OpenQA.Selenium.Internal;
 using NUnit.Framework;
 
 namespace OpenQA.Selenium.Environment
@@ -12,11 +14,12 @@ namespace OpenQA.Selenium.Environment
     {
         private Process webserverProcess;
 
-        private string standaloneTestJar = @"java/test/org/openqa/selenium/environment/appserver_deploy.jar";
+        private string standaloneTestJar = @"selenium/java/test/org/openqa/selenium/environment/appserver_deploy.jar";
         private string projectRootPath;
         private bool captureWebServerOutput;
         private bool hideCommandPrompt;
         private string javaHomeDirectory;
+        private string port;
 
         private StringBuilder outputData = new StringBuilder();
 
@@ -26,14 +29,19 @@ namespace OpenQA.Selenium.Environment
             this.captureWebServerOutput = config.CaptureConsoleOutput;
             this.hideCommandPrompt = config.HideCommandPromptWindow;
             this.javaHomeDirectory = config.JavaHomeDirectory;
+            this.port = config.Port;
         }
 
         public void Start()
         {
             if (webserverProcess == null || webserverProcess.HasExited)
             {
-                standaloneTestJar = standaloneTestJar.Replace('/', Path.DirectorySeparatorChar);
-                if (!File.Exists(Path.Combine(projectRootPath, standaloneTestJar)))
+                var runfiles = Runfiles.Create();
+                standaloneTestJar = runfiles.Rlocation(standaloneTestJar);
+
+                Console.Write("Standalone jar is " + standaloneTestJar);
+
+                if (!File.Exists(standaloneTestJar))
                 {
                     throw new FileNotFoundException(
                         string.Format(
@@ -74,6 +82,7 @@ namespace OpenQA.Selenium.Environment
                 }
 
                 processArgsBuilder.AppendFormat("-jar {0}", standaloneTestJar);
+                processArgsBuilder.AppendFormat(" {0}", this.port);
 
                 webserverProcess = new Process();
                 if (!string.IsNullOrEmpty(javaExecutablePath))
@@ -94,11 +103,11 @@ namespace OpenQA.Selenium.Environment
                     webserverProcess.StartInfo.EnvironmentVariables["JAVA_HOME"] = this.javaHomeDirectory;
                 }
 
-                if (captureWebServerOutput)
-                {
+//                if (captureWebServerOutput)
+//                {
                     webserverProcess.StartInfo.RedirectStandardOutput = true;
                     webserverProcess.StartInfo.RedirectStandardError = true;
-                }
+//                }
 
                 webserverProcess.Start();
 

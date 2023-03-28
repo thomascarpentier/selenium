@@ -163,17 +163,34 @@ load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
 
 http_archive(
-    name = "d2l_rules_csharp",
-    sha256 = "c0152befb1fd0e08527b38e41ef00b6627f9f0c2be6f2d23a4950f41701fa48a",
-    strip_prefix = "rules_csharp-50e2f6c79e7a53e50b4518239b5ebcc61279759e",
-    urls = [
-        "https://github.com/Brightspace/rules_csharp/archive/50e2f6c79e7a53e50b4518239b5ebcc61279759e.tar.gz",
-    ],
+    name = "rules_dotnet",
+    sha256 = "77575d68c609d98b92f3df8db79944e7b60c035766e1c233349aeb1659c86ff9",
+    strip_prefix = "rules_dotnet-0.8.12",
+    url = "https://github.com/bazelbuild/rules_dotnet/releases/download/v0.8.12/rules_dotnet-v0.8.12.tar.gz",
 )
 
-load("//dotnet:workspace.bzl", "selenium_register_dotnet")
+load(
+    "@rules_dotnet//dotnet:repositories.bzl",
+    "dotnet_register_toolchains",
+    "rules_dotnet_dependencies",
+)
 
-selenium_register_dotnet()
+rules_dotnet_dependencies()
+
+# Here you can specify the version of the .NET SDK to use.
+dotnet_register_toolchains("dotnet", "6.0.401")
+
+load("@rules_dotnet//dotnet:rules_dotnet_nuget_packages.bzl", "rules_dotnet_nuget_packages")
+
+rules_dotnet_nuget_packages()
+
+load("@rules_dotnet//dotnet:paket2bazel_dependencies.bzl", "paket2bazel_dependencies")
+
+paket2bazel_dependencies()
+
+load("//dotnet:paket.bzl", "paket")
+
+paket()
 
 http_archive(
     name = "rules_rust",

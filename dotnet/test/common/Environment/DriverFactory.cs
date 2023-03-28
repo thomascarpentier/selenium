@@ -13,10 +13,11 @@ namespace OpenQA.Selenium.Environment
     public class DriverFactory
     {
         string driverPath;
+        string browserBinaryLocation;
         private Dictionary<Browser, Type> serviceTypes = new Dictionary<Browser, Type>();
         private Dictionary<Browser, Type> optionsTypes = new Dictionary<Browser, Type>();
 
-        public DriverFactory(string driverPath)
+        public DriverFactory(string driverPath, string browserBinaryLocation)
         {
             if (string.IsNullOrEmpty(driverPath))
             {
@@ -26,6 +27,8 @@ namespace OpenQA.Selenium.Environment
             {
                 this.driverPath = driverPath;
             }
+
+            this.browserBinaryLocation = browserBinaryLocation;
 
             this.PopulateServiceTypes();
             this.PopulateOptionsTypes();
@@ -72,8 +75,12 @@ namespace OpenQA.Selenium.Environment
             if (typeof(ChromeDriver).IsAssignableFrom(driverType))
             {
                 browser = Browser.Chrome;
-                options = GetDriverOptions<ChromeOptions>(driverType, driverOptions);
                 service = CreateService<ChromeDriverService>(driverType);
+                options = GetDriverOptions<ChromeOptions>(driverType, driverOptions);
+                if (!string.IsNullOrEmpty(this.browserBinaryLocation))
+                {
+                    ((ChromeOptions)options).BinaryLocation = this.browserBinaryLocation;
+                }
             }
             else if (typeof(InternetExplorerDriver).IsAssignableFrom(driverType))
             {
@@ -84,8 +91,22 @@ namespace OpenQA.Selenium.Environment
             else if (typeof(FirefoxDriver).IsAssignableFrom(driverType))
             {
                 browser = Browser.Firefox;
-                options = GetDriverOptions<FirefoxOptions>(driverType, driverOptions);
                 service = CreateService<FirefoxDriverService>(driverType);
+                options = GetDriverOptions<FirefoxOptions>(driverType, driverOptions);
+                if (!string.IsNullOrEmpty(this.browserBinaryLocation))
+                {
+                    ((FirefoxOptions)options).BrowserExecutableLocation = this.browserBinaryLocation;
+                }
+            }
+            else if (typeof(EdgeDriver).IsAssignableFrom(driverType))
+            {
+                browser = Browser.Edge;
+                service = CreateService<EdgeDriverService>(driverType);
+                options = GetDriverOptions<EdgeOptions>(driverType, driverOptions);
+                if (!string.IsNullOrEmpty(this.browserBinaryLocation))
+                {
+                    ((EdgeOptions)options).BinaryLocation = this.browserBinaryLocation;
+                }
             }
             else if (typeof(SafariDriver).IsAssignableFrom(driverType))
             {

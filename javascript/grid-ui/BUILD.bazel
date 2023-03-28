@@ -109,3 +109,9 @@ react_scripts_test(
         "no-sandbox",
     ],
 )
+
+exports_files(
+    srcs = [
+        "public/logo512.png",
+    ],
+)

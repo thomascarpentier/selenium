@@ -14,6 +14,10 @@
     <OutputPath>..\..\..\..\..\build\cli\Release\</OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup>
+      <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="Handlebars.Net" Version="1.11.5" />

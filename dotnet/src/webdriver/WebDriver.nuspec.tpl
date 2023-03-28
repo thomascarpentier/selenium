@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
-    <id>$packageid$</id>
-    <version>$version$</version>
+    <id>{id}</id>
+    <version>{version}</version>
     <authors>Selenium Committers</authors>
     <copyright>Copyright © 2020 Software Freedom Conservancy</copyright>
     <owners>selenium</owners>
@@ -23,18 +23,9 @@
     <repository url="https://github.com/SeleniumHQ/selenium" />
     <license type="expression">Apache-2.0</license>
     <iconUrl>https://selenium.dev/images/selenium_logo_square_green.png</iconUrl>
-    <icon>images\logo.png</icon>
+    <icon>images\icon.png</icon>
     <tags>selenium webdriver browser automation</tags>
     <dependencies>
-      <group targetFramework="net48">
-        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
-      </group>
-      <group targetFramework="netstandard2.0">
-        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
-      </group>
-      <group targetFramework="netstandard2.1">
-        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
-      </group>
       <group targetFramework="net5.0">
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
       </group>
@@ -47,10 +38,6 @@
     </frameworkAssemblies>
   </metadata>
   <files>
-    <file src="lib\**" target="lib" />
-    <file src="images\**" target="images" />
-    <file src="manager\**" target="manager"/>
-    <file src="build\Selenium.WebDriver.targets" target="build" />
-    <file src="buildTransitive\Selenium.WebDriver.targets" target="buildTransitive" />
+    {files}
   </files>
 </package>
