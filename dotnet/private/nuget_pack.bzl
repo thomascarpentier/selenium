@@ -84,8 +84,8 @@ def _nuget_pack_impl(ctx):
           "echo $(pwd) && " + \
           "$(location @bazel_tools//tools/zip:zipper) x %s -d %s-working-dir && " % (zip_file.path, ctx.label.name) + \
           "cd %s-working-dir && " % ctx.label.name + \
-          "../%s restore --no-dependencies -v=q && " % dotnet.path + \
-          "../%s pack -v=q -p:NuspecFile=%s.nuspec --no-build -p:PackageId=%s && " % (dotnet.path, ctx.attr.id, ctx.attr.id) + \
+          "../%s restore --no-dependencies && " % dotnet.path + \
+          "../%s pack -p:NuspecFile=%s.nuspec --no-build -p:PackageId=%s && " % (dotnet.path, ctx.attr.id, ctx.attr.id) + \
           "cp bin/Debug/%s.%s.nupkg ../%s" % (ctx.attr.id, ctx.attr.version, pkg.path)
 
     cmd = ctx.expand_location(
@@ -104,7 +104,7 @@ def _nuget_pack_impl(ctx):
         tools = [
             ctx.executable._zip,
             dotnet,
-        ],
+        ] + toolchain.default.files.to_list(),
         command = cmd,
         mnemonic = "CreateNupkg",
     )
