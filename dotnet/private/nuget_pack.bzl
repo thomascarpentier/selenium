@@ -79,6 +79,8 @@ def _nuget_pack_impl(ctx):
         ],
     )
 
+    print(toolchain.default.files.to_list())
+
     ctx.actions.run_shell(
         outputs = [pkg],
         inputs = [
@@ -88,7 +90,7 @@ def _nuget_pack_impl(ctx):
         tools = [
             ctx.executable._zip,
             dotnet,
-        ] + toolchain.default.files.to_list(),
+        ] + toolchain.default.files.to_list() + toolchain.runtime.default_runfiles.files.to_list() + toolchain.csharp_compiler.default_runfiles.files.to_list(),
         command = cmd,
         mnemonic = "CreateNupkg",
     )
