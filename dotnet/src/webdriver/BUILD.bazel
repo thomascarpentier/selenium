@@ -42,6 +42,7 @@ copy_file(
 
 nuget_pack(
     name = "pack-webdriver",
+    csproj_file = "WebDriver.csproj",
     files = {
         "//javascript/grid-ui:public/logo512.png": "images/logo.png",
         "//common/manager:selenium-manager-linux": "manager/linux/selenium-manager",
@@ -55,7 +56,10 @@ nuget_pack(
         ":%s" % moniker: "WebDriver"
         for moniker in DEFAULT_FRAMEWORKS
     },
-    nuget_spec = "WebDriver.nuspec",
+    property_group_vars = {
+        "BaseImagePath": "images",
+        "BaseSeleniumManagerPath": "manager",
+    },
     version = SE_VERSION,
 )
 

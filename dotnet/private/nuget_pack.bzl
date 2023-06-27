@@ -2,18 +2,6 @@ load("@rules_dotnet//dotnet/private:providers.bzl", "DotnetAssemblyInfo")
 load(":dotnet_utils.bzl", "dotnet_preamble")
 load(":providers.bzl", "NugetPackageInfo")
 
-_CSPROJ_TEMPLATE = """<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-      <!-- Framework should not matter the way we're using this -->
-      <TargetFramework>net6.0</TargetFramework>
-      <ImplicitUsings>enable</ImplicitUsings>
-      <Nullable>enable</Nullable>
-
-      <NuspecProperties>{nuspec_properties}</NuspecProperties>
-    </PropertyGroup>
-
-  </Project>"""
-
 def _guess_dotnet_version(assembly_info):
     if len(assembly_info.libs) == 0:
         fail("Cannot guess .Net version without an output dll: ", assembly_info.name)
@@ -40,28 +28,20 @@ def _nuget_pack_impl(ctx):
         assembly_info = lib[DotnetAssemblyInfo]
 
         for dll in assembly_info.libs:
-            paths[dll] = "lib/%s/%s.dll" % (_guess_dotnet_version(assembly_info), name)
+            paths[dll] = "bin/Debug/%s/%s.dll" % (_guess_dotnet_version(assembly_info), name)
         for pdb in assembly_info.pdbs:
-            paths[pdb] = "lib/%s/%s.pdb" % (_guess_dotnet_version(assembly_info), name)
+            paths[pdb] = "bin/Debug/%s/%s.pdb" % (_guess_dotnet_version(assembly_info), name)
 
     for (file, name) in ctx.attr.files.items():
         paths[file.files.to_list()[0]] = name
 
     # Generate a spoof csproj file so the dotnet tooling is happy later
-    csproj_file = ctx.actions.declare_file("%s-temp.csproj")
-    ctx.actions.write(
-        output = csproj_file,
-        content = _CSPROJ_TEMPLATE.format(
-            nuspec_properties = ";".join(["Version=%s" % ctx.attr.version, "PackageId=%s" % ctx.attr.id]),
-        ),
-        is_executable = False,
-    )
+    csproj_file = ctx.file.csproj_file
 
     # Zip everything up, and then unzip it into a temp directory
     zip_file = ctx.actions.declare_file("%s-intermediate.zip" % ctx.label.name)
     args = ctx.actions.args()
     args.add_all(["Cc", zip_file])
-    args.add("%s.nuspec=%s" % (ctx.attr.id, ctx.file.nuget_spec.path))
     args.add("%s.csproj=%s" % (ctx.attr.id, csproj_file.path))
     for (file, path) in paths.items():
         args.add("%s=%s" % (path, file.path))
@@ -69,7 +49,7 @@ def _nuget_pack_impl(ctx):
     ctx.actions.run(
         executable = ctx.executable._zip,
         arguments = [args],
-        inputs = paths.keys() + [ctx.file.nuget_spec, csproj_file],
+        inputs = paths.keys() + [ctx.file.csproj_file],
         outputs = [zip_file],
     )
 
@@ -79,13 +59,17 @@ def _nuget_pack_impl(ctx):
     dotnet = toolchain.runtime.files_to_run.executable
     pkg = ctx.actions.declare_file("%s.nupkg" % ctx.label.name)
 
+    variables = ""
+    for (key, value) in ctx.attr.property_group_vars.items():
+        variables += " -p:%s=\"%s\" " % (key, value)
+
     cmd = dotnet_preamble(toolchain) + \
           "mkdir %s-working-dir && " % ctx.label.name + \
           "echo $(pwd) && " + \
           "$(location @bazel_tools//tools/zip:zipper) x %s -d %s-working-dir && " % (zip_file.path, ctx.label.name) + \
           "cd %s-working-dir && " % ctx.label.name + \
           "../%s restore --no-dependencies && " % dotnet.path + \
-          "../%s pack -p:NuspecFile=%s.nuspec --no-build -p:PackageId=%s && " % (dotnet.path, ctx.attr.id, ctx.attr.id) + \
+          "../%s pack --no-build -p:PackageId=%s -p:Version=%s %s && " % (dotnet.path, ctx.attr.id, ctx.attr.version, variables) + \
           "cp bin/Debug/%s.%s.nupkg ../%s" % (ctx.attr.id, ctx.attr.version, pkg.path)
 
     cmd = ctx.expand_location(
@@ -136,8 +120,12 @@ nuget_pack = rule(
             allow_empty = True,
             allow_files = True,
         ),
-        "nuget_spec": attr.label(
-            doc = "The `.nuspec` file to use when packaging",
+        "property_group_vars": attr.string_dict(
+            doc = "Keys and values for variables declared in `PropertyGroup`s in the `csproj_file`",
+            allow_empty = True,
+        ),
+        "csproj_file": attr.label(
+            doc = "The `.csproj` file to use when packaging",
             mandatory = True,
             allow_single_file = True,
         ),
