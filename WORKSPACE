@@ -164,6 +164,12 @@ pinned_maven_install()
 
 http_archive(
     name = "rules_dotnet",
+    patch_args = [
+        "-p1",
+    ],
+    patches = [
+        "//dotnet:expanded_sdks.patch",
+    ],
     sha256 = "77575d68c609d98b92f3df8db79944e7b60c035766e1c233349aeb1659c86ff9",
     strip_prefix = "rules_dotnet-0.8.12",
     url = "https://github.com/bazelbuild/rules_dotnet/releases/download/v0.8.12/rules_dotnet-v0.8.12.tar.gz",

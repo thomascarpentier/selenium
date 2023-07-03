@@ -69,8 +69,8 @@ def _nuget_pack_impl(ctx):
           "echo $(pwd) && " + \
           "$(location @bazel_tools//tools/zip:zipper) x %s -d %s-working-dir && " % (zip_file.path, ctx.label.name) + \
           "cd %s-working-dir && " % ctx.label.name + \
-          "../%s restore --no-dependencies && " % dotnet.path + \
-          "../%s pack --no-build -p:PackageId=%s -p:Version=%s %s && " % (dotnet.path, ctx.attr.id, ctx.attr.version, variables) + \
+          "echo '<configuration><packageSources><clear /></packageSources></configuration>' && " + \
+          "$DOTNET pack --no-build -p:PackageId=%s -p:Version=%s %s && " % (ctx.attr.id, ctx.attr.version, variables) + \
           "cp bin/Debug/%s.%s.nupkg ../%s" % (ctx.attr.id, ctx.attr.version, pkg.path)
 
     cmd = ctx.expand_location(
@@ -81,7 +81,6 @@ def _nuget_pack_impl(ctx):
     )
 
     project_assembly_info = ctx.attr.project_sdk[DotnetAssemblyInfo]
-    print(project_assembly_info)
 
     ctx.actions.run_shell(
         outputs = [pkg],
@@ -92,7 +91,7 @@ def _nuget_pack_impl(ctx):
         tools = [
             ctx.executable._zip,
             dotnet,
-        ] + toolchain.default.files.to_list() + toolchain.runtime.default_runfiles.files.to_list() + toolchain.csharp_compiler.default_runfiles.files.to_list() + project_assembly_info.refs,
+        ] + toolchain.default.files.to_list() + toolchain.runtime.default_runfiles.files.to_list() + toolchain.runtime.data_runfiles.files.to_list(),
         command = cmd,
         mnemonic = "CreateNupkg",
     )
