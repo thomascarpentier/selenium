@@ -1,3 +1,8 @@
+# The change to the PATH is recommended here:
+# https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual?source=recommendations#set-environment-variables-system-wide
+# We list our .Net installation first because we
+# want it to be picked up first
+
 def dotnet_preamble(toolchain):
     return """
 export DOTNET="$(pwd)/{dotnet}"
