@@ -11,9 +11,13 @@ load(
 )
 load("@rules_dotnet//dotnet/private:rids.bzl", "RUNTIME_GRAPH")
 
+DEFAULT_TOOL_FRAMEWORK = "net6.0"
+
 def _target_framework_transition_impl(settings, attr):
-    if not is_core_framework(attr.target_framework):
-        msg = "Transitions must be to a .Net Core framework: " + attr.target_framework
+    target_framework = getattr(attr, "target_framework", DEFAULT_TOOL_FRAMEWORK)
+
+    if not is_core_framework(target_framework):
+        msg = "Transitions must be to a .Net Core framework: " + target_framework
         fail(msg)
 
     incoming_tfm = settings["@rules_dotnet//dotnet:target_framework"]
@@ -21,7 +25,7 @@ def _target_framework_transition_impl(settings, attr):
     if incoming_tfm not in FRAMEWORK_COMPATABILITY_TRANSITION_OUTPUTS:
         fail("Error setting @rules_dotnet//dotnet:target_framework: invalid value '" + incoming_tfm + "'. Allowed values are " + str(FRAMEWORK_COMPATIBILITY.keys()))
 
-    transitioned_tfm = attr.target_framework
+    transitioned_tfm = target_framework
 
     runtime_identifier = settings["@rules_dotnet//dotnet:rid"]
 

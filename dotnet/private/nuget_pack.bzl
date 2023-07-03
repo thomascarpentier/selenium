@@ -1,5 +1,6 @@
 load("@rules_dotnet//dotnet/private:providers.bzl", "DotnetAssemblyInfo")
 load(":dotnet_utils.bzl", "dotnet_preamble")
+load(":framework_transition.bzl", "target_framework_transition")
 load(":providers.bzl", "NugetPackageInfo")
 
 def _guess_dotnet_version(assembly_info):
@@ -79,7 +80,8 @@ def _nuget_pack_impl(ctx):
         ],
     )
 
-    print(toolchain.default.files.to_list())
+    project_assembly_info = ctx.attr.project_sdk[DotnetAssemblyInfo]
+    print(project_assembly_info)
 
     ctx.actions.run_shell(
         outputs = [pkg],
@@ -90,7 +92,7 @@ def _nuget_pack_impl(ctx):
         tools = [
             ctx.executable._zip,
             dotnet,
-        ] + toolchain.default.files.to_list() + toolchain.runtime.default_runfiles.files.to_list() + toolchain.csharp_compiler.default_runfiles.files.to_list(),
+        ] + toolchain.default.files.to_list() + toolchain.runtime.default_runfiles.files.to_list() + toolchain.csharp_compiler.default_runfiles.files.to_list() + project_assembly_info.refs,
         command = cmd,
         mnemonic = "CreateNupkg",
     )
@@ -131,11 +133,19 @@ nuget_pack = rule(
             mandatory = True,
             allow_single_file = True,
         ),
+        "project_sdk": attr.label(
+            mandatory = True,
+            providers = [DotnetAssemblyInfo],
+        ),
         "_zip": attr.label(
             default = "@bazel_tools//tools/zip:zipper",
             executable = True,
             cfg = "exec",
         ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
     },
+    cfg = target_framework_transition,
     toolchains = ["@rules_dotnet//dotnet:toolchain_type"],
 )

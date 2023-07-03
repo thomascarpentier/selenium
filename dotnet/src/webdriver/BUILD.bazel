@@ -56,6 +56,7 @@ nuget_pack(
         ":%s" % moniker: "WebDriver"
         for moniker in DEFAULT_FRAMEWORKS
     },
+    project_sdk = framework("net6.0", "Microsoft.Netcore.App.Ref"),
     property_group_vars = {
         "BaseImagePath": "images",
         "BaseSeleniumManagerPath": "manager",
