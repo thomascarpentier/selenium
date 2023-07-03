@@ -15,6 +15,7 @@ export DOTNET_NOLOGO=1
 export DOTNET_ROOT="$(dirname $DOTNET)"
 export PATH=$DOTNET_ROOT:$DOTNET_ROOT/tools:$PATH
 export MSBuildEnableWorkloadResolver=false
+export CWD=$(pwd)
 
 # Create `global.json` to trick .Net into using the hermetic toolchain
 # https://learn.microsoft.com/en-us/dotnet/core/tools/global-json

@@ -60,6 +60,19 @@ def _nuget_pack_impl(ctx):
     dotnet = toolchain.runtime.files_to_run.executable
     pkg = ctx.actions.declare_file("%s.nupkg" % ctx.label.name)
 
+    # Prepare our cache of nupkg files
+    packages = ctx.actions.declare_directory("%s-nuget-packages" % ctx.label.name)
+    package_files = [f for f in ctx.files.nuget_packages if f.extension == "nupkg"]
+    packages_cmd = "mkdir -p %s " % packages.path
+    if len(package_files):
+        packages_cmd += "&& cp " + " ".join([f.path for f in package_files]) + " " + packages.path
+    ctx.actions.run_shell(
+        outputs = [packages],
+        inputs = package_files,
+        command = packages_cmd,
+        mnemonic = "LayoutNugetPackages",
+    )
+
     variables = ""
     for (key, value) in ctx.attr.property_group_vars.items():
         variables += " -p:%s=\"%s\" " % (key, value)
@@ -69,7 +82,8 @@ def _nuget_pack_impl(ctx):
           "echo $(pwd) && " + \
           "$(location @bazel_tools//tools/zip:zipper) x %s -d %s-working-dir && " % (zip_file.path, ctx.label.name) + \
           "cd %s-working-dir && " % ctx.label.name + \
-          "echo '<configuration><packageSources><clear /></packageSources></configuration>' && " + \
+          "echo '<configuration><packageSources><clear /><add key=\"local\" value=\"%%CWD%%/%s\" /></packageSources></configuration>' && " % packages.path + \
+          "$DOTNET restore --no-dependencies && " + \
           "$DOTNET pack --no-build -p:PackageId=%s -p:Version=%s %s && " % (ctx.attr.id, ctx.attr.version, variables) + \
           "cp bin/Debug/%s.%s.nupkg ../%s" % (ctx.attr.id, ctx.attr.version, pkg.path)
 
@@ -80,13 +94,12 @@ def _nuget_pack_impl(ctx):
         ],
     )
 
-    project_assembly_info = ctx.attr.project_sdk[DotnetAssemblyInfo]
-
     ctx.actions.run_shell(
         outputs = [pkg],
         inputs = [
             zip_file,
             dotnet,
+            packages,
         ],
         tools = [
             ctx.executable._zip,
@@ -132,10 +145,7 @@ nuget_pack = rule(
             mandatory = True,
             allow_single_file = True,
         ),
-        "project_sdk": attr.label(
-            mandatory = True,
-            providers = [DotnetAssemblyInfo],
-        ),
+        "nuget_packages": attr.label(),
         "_zip": attr.label(
             default = "@bazel_tools//tools/zip:zipper",
             executable = True,
