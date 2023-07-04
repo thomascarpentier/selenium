@@ -62,10 +62,12 @@ def _nuget_pack_impl(ctx):
 
     # Prepare our cache of nupkg files
     packages = ctx.actions.declare_directory("%s-nuget-packages" % ctx.label.name)
-    package_files = [f for f in ctx.files.nuget_packages if f.extension == "nupkg"]
     packages_cmd = "mkdir -p %s " % packages.path
+
+    package_files = [f for f in ctx.files.nuget_packages if f.extension == "nupkg"]
     if len(package_files):
         packages_cmd += "&& cp " + " ".join([f.path for f in package_files]) + " " + packages.path
+
     ctx.actions.run_shell(
         outputs = [packages],
         inputs = package_files,
@@ -82,7 +84,7 @@ def _nuget_pack_impl(ctx):
           "echo $(pwd) && " + \
           "$(location @bazel_tools//tools/zip:zipper) x %s -d %s-working-dir && " % (zip_file.path, ctx.label.name) + \
           "cd %s-working-dir && " % ctx.label.name + \
-          "echo '<configuration><packageSources><clear /><add key=\"local\" value=\"%%CWD%%/%s\" /></packageSources></configuration>' && " % packages.path + \
+          "echo '<configuration><packageSources><clear /><add key=\"local\" value=\"%%CWD%%/%s\" /></packageSources></configuration>' >nuget.config && " % packages.path + \
           "$DOTNET restore --no-dependencies && " + \
           "$DOTNET pack --no-build -p:PackageId=%s -p:Version=%s %s && " % (ctx.attr.id, ctx.attr.version, variables) + \
           "cp bin/Debug/%s.%s.nupkg ../%s" % (ctx.attr.id, ctx.attr.version, pkg.path)

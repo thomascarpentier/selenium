@@ -61,6 +61,9 @@ nuget_pack(
         "BaseImagePath": "images",
         "BaseSeleniumManagerPath": "manager",
     },
+    tags = [
+        "block-network",
+    ],
     version = SE_VERSION,
 )
 
