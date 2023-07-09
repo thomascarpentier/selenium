@@ -1,9 +1,0 @@
-licenses(["notice"])
-
-exports_files(["nuget.exe"])
-
-filegroup(
-    name = "packages",
-    srcs = glob(["packages/*.nupkg"]),
-    visibility = ["//dotnet:__subpackages__"],
-)

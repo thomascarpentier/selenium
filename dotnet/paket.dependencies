@@ -5,6 +5,7 @@ group dotnet_deps_net6.0
     nuget CommandLineParser 2.8.0
     nuget Handlebars.Net 1.11.5
     nuget Humanizer.Core 2.8.26
+    nuget Microsoft.AspNetCore.App.Ref 6.0.19
     nuget Microsoft.Extensions.DependencyInjection 3.1.9
     nuget Microsoft.Extensions.DependencyInjection.Abstractions 3.1.9
     nuget Microsoft.IdentityModel.Abstractions 6.19.0
@@ -14,7 +15,7 @@ group dotnet_deps_net6.0
     nuget Microsoft.NETCore.App.Runtime.osx-arm64 6.0.15
     nuget Microsoft.NETCore.App.Runtime.osx-x64 6.0.15
     nuget Microsoft.NETCore.App.Runtime.win-x64 6.0.15
-    nuget Microsoft.NETCore.App.Ref 6.0.8
+    nuget Microsoft.NETCore.App.Ref 6.0.9
     nuget Newtonsoft.Json 13.0.1
     nuget NUnit 3.13.2
     nuget NUnitLite 3.13.2
@@ -29,6 +30,7 @@ group dotnet_deps_net5.0
     nuget CommandLineParser 2.8.0
     nuget Handlebars.Net 1.11.5
     nuget Humanizer.Core 2.8.26
+    nuget Microsoft.AspNetCore.App.Ref 5.0.0
     nuget Microsoft.Extensions.DependencyInjection 3.1.9
     nuget Microsoft.Extensions.DependencyInjection.Abstractions 3.1.9
     nuget Microsoft.IdentityModel.Abstractions 6.19.0

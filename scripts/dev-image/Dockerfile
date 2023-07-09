@@ -27,6 +27,15 @@ RUN chmod 755 /usr/bin/bazelisk && ln -sf /usr/bin/bazelisk /usr/bin/bazel
 RUN chmod 777 /
 USER dev
 WORKDIR /home/dev
+
+RUN curl -L https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh && \
+    chmod +x dotnet-install.sh && \
+    ./dotnet-install.sh --channel 6.0 && \
+    rm dotnet-install.sh
+
+ENV DOTNET_ROOT=/home/dev/.dotnet
+ENV PATH=$PATH:$DOTNET_ROOT/tools
+
 RUN git clone --depth 1 https://github.com/SeleniumHQ/selenium.git /home/dev/selenium
 RUN echo "build --//common:pin_browsers" >>/home/dev/selenium/.bazelrc.local
 RUN echo "build --//common:headless" >>/home/dev/selenium/.bazelrc.local
