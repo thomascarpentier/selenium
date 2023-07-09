@@ -11,7 +11,7 @@ index 5f44be6..9ee31cf 100644
  )
 
 diff --git a/dotnet/private/rules/nuget/imports.bzl b/dotnet/private/rules/nuget/imports.bzl
-index bfa1768..274538d 100644
+index bfa1768..f8387a5 100644
 --- a/dotnet/private/rules/nuget/imports.bzl
 +++ b/dotnet/private/rules/nuget/imports.bzl
 @@ -58,6 +58,7 @@ def _import_library(ctx):
@@ -22,20 +22,19 @@ index bfa1768..274538d 100644
      )]
 
  import_library = rule(
-@@ -106,6 +107,11 @@ import_library = rule(
+@@ -106,6 +107,10 @@ import_library = rule(
          "sha512": attr.string(
              doc = "The SHA512 sum of the NuGet package",
          ),
 +        "nupkg": attr.label(
 +            doc = "The `.nupkg` file providing this import",
 +            allow_single_file = True,
-+            mandatory = True,
 +        ),
      },
      toolchains = [
          "@rules_dotnet//dotnet:toolchain_type",
 diff --git a/dotnet/private/rules/nuget/nuget_archive.bzl b/dotnet/private/rules/nuget/nuget_archive.bzl
-index f6108ff..de65bcf 100644
+index f6108ff..c675ee0 100644
 --- a/dotnet/private/rules/nuget/nuget_archive.bzl
 +++ b/dotnet/private/rules/nuget/nuget_archive.bzl
 @@ -13,6 +13,8 @@ load(
@@ -47,24 +46,26 @@ index f6108ff..de65bcf 100644
  def _is_windows(repository_ctx):
      """Returns true if the host operating system is windows."""
      os_name = repository_ctx.os.name.lower()
-@@ -285,7 +287,15 @@ def _nuget_archive_impl(ctx):
+@@ -285,7 +287,17 @@ def _nuget_archive_impl(ctx):
          "password": "TODO",
      } for url in urls}
 
 -    ctx.download_and_extract(urls, type = "zip", integrity = ctx.attr.sha512, auth = auth)
 +    file_name = "%s.zip" % ctx.name
 +    nupkg_name = "%s.%s.nupkg" % (ctx.attr.id, ctx.attr.version)
-+    print(nupkg_name)
++    names = [nupkg_name]
 +    if nupkg_name.startswith(GLOBAL_NUGET_PREFIX):
 +        nupkg_name = nupkg_name[len(GLOBAL_NUGET_PREFIX) + 1:]
++        names.append(nupkg_name)
 +
 +    ctx.download(urls, output = file_name, integrity = ctx.attr.sha512, auth = auth)
 +    ctx.extract(archive = file_name)
-+    ctx.symlink(file_name, nupkg_name)
++    for name in names:
++        ctx.symlink(file_name, name)
 
      files = _read_dir(ctx, ".").replace(str(ctx.path(".")) + "/", "").splitlines()
 
-@@ -322,6 +332,7 @@ load("@rules_dotnet//dotnet/private/rules/nuget:nuget_archive.bzl", "tfm_filegro
+@@ -322,6 +334,7 @@ load("@rules_dotnet//dotnet/private/rules/nuget:nuget_archive.bzl", "tfm_filegro
          "filegroup(name = \"data\", srcs = [])",
          _create_rid_native_select("native", groups.get("runtimes")) or "filegroup(name = \"native\", srcs = [])",
          "filegroup(name = \"content_files\", srcs = [%s])" % ",".join(["\n  \"%s\"" % a for a in groups.get("contentFiles")["any"]]),
@@ -73,7 +74,7 @@ index f6108ff..de65bcf 100644
 
  nuget_archive = repository_rule(
 diff --git a/dotnet/private/rules/nuget/nuget_repo.bzl b/dotnet/private/rules/nuget/nuget_repo.bzl
-index dc70b0d..8ac3bbd 100644
+index dc70b0d..2993ff9 100644
 --- a/dotnet/private/rules/nuget/nuget_repo.bzl
 +++ b/dotnet/private/rules/nuget/nuget_repo.bzl
 @@ -1,9 +1,7 @@
@@ -87,16 +88,24 @@ index dc70b0d..8ac3bbd 100644
 
  def _nuget_repo_impl(ctx):
      for (name_version, deps) in ctx.attr.packages.items():
-@@ -13,7 +11,7 @@ def _nuget_repo_impl(ctx):
+@@ -12,8 +10,15 @@ def _nuget_repo_impl(ctx):
+         targeting_pack_overrides = ctx.attr.targeting_pack_overrides[name.lower()]
          template = Label("@rules_dotnet//dotnet/private/rules/nuget:template.BUILD")
 
++        nupkg_path = "@{PREFIX}.{NAME_LOWER}.v{VERSION}//:{NAME_LOWER}.{VERSION}.nupkg".format(
++            PREFIX = GLOBAL_NUGET_PREFIX,
++            NAME = name,
++            NAME_LOWER = name.lower(),
++            VERSION = version,
++        )
++
          ctx.template("{}/{}/BUILD.bazel".format(name.lower(), version), template, {
 -            "{PREFIX}": _GLOBAL_NUGET_PREFIX,
 +            "{PREFIX}": GLOBAL_NUGET_PREFIX,
              "{NAME}": name,
              "{NAME_LOWER}": name.lower(),
              "{VERSION}": version,
-@@ -26,7 +24,7 @@ def _nuget_repo_impl(ctx):
+@@ -26,7 +31,7 @@ def _nuget_repo_impl(ctx):
          ctx.file("{}/BUILD.bazel".format(name.lower()), r"""package(default_visibility = ["//visibility:public"])
  alias(name = "{name}", actual = "//{name}/{version}")
  alias(name = "content_files", actual = "@{prefix}.{name}.v{version}//:content_files")
@@ -105,7 +114,7 @@ index dc70b0d..8ac3bbd 100644
 
  _nuget_repo = repository_rule(
      _nuget_repo_impl,
-@@ -53,7 +51,7 @@ def nuget_repo(name, packages):
+@@ -53,7 +58,7 @@ def nuget_repo(name, packages):
          # maybe another nuget_repo has the same nuget package dependency
          maybe(
              nuget_archive,
