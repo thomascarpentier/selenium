@@ -93,7 +93,7 @@ NUGET
       Microsoft.CSharp (>= 4.4)
       System.Reflection.TypeExtensions (>= 4.4)
     Humanizer.Core (2.8.26)
-    Microsoft.AspNetCore.App.Ref (6.0.19)
+    Microsoft.AspNetCore.App.Ref (6.0.9)
     Microsoft.CSharp (4.7)
     Microsoft.Extensions.DependencyInjection (3.1.9)
       Microsoft.Extensions.DependencyInjection.Abstractions (>= 3.1.9)

@@ -5,7 +5,7 @@ group dotnet_deps_net6.0
     nuget CommandLineParser 2.8.0
     nuget Handlebars.Net 1.11.5
     nuget Humanizer.Core 2.8.26
-    nuget Microsoft.AspNetCore.App.Ref 6.0.19
+    nuget Microsoft.AspNetCore.App.Ref 6.0.9
     nuget Microsoft.Extensions.DependencyInjection 3.1.9
     nuget Microsoft.Extensions.DependencyInjection.Abstractions 3.1.9
     nuget Microsoft.IdentityModel.Abstractions 6.19.0
