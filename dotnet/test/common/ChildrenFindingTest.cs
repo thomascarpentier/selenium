@@ -350,7 +350,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
-        [NeedsFreshDriver(IsCreatedBeforeTest = true)]
+        [NeedsFreshDriver(IsCreatedAfterTest = true)]
         public void ElementCanGetLinkByLinkTestIgnoringTrailingWhitespace()
         {
             driver.Url = simpleTestPage;
