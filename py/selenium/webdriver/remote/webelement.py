@@ -692,7 +692,7 @@ class WebElement(object):
         zipped = zipfile.ZipFile(fp, 'w', zipfile.ZIP_DEFLATED)
         zipped.write(filename, os.path.split(filename)[1])
         zipped.close()
-        content = base64.encodestring(fp.getvalue())
+        content = base64.encodebytes(fp.getvalue())
         if not isinstance(content, str):
             content = content.decode('utf-8')
         try:
